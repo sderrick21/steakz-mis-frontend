@@ -132,7 +132,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex-1">
             <div className="font-bold">Contact Info</div>
             <div className="text-sm">Phone: (555) 123-4567</div>
-            <div className="text-sm">Email: info@staceysteakz.com</div>
+            <div className="text-sm">Email: info@steakz.co.uk</div>
             <button className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs">Edit</button>
           </div>
           <div className="flex-1">
