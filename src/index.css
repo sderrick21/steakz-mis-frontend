@@ -1,0 +1,183 @@
+/* Global Styles - Steakz MIS */
+body {
+  margin: 0;
+  font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  background: #0f1923;
+  color: #f5f3ef;
+  min-height: 100vh;
+}
+
+a {
+  color: #c9a84c;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: #fff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #c9a84c;
+  margin-top: 0;
+}
+
+nav {
+  background: #0a1520;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  padding: 0.5rem 0;
+  border-bottom: 2px solid #c9a84c22;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+button, .btn {
+  background: #c9a84c;
+  color: #0f1923;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.5px;
+}
+button:hover, .btn:hover {
+  background: #e8c96a;
+  color: #0f1923;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.25);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.card {
+  background: #162030;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid #1e3048;
+}
+
+input, select, textarea {
+  background: #1a2d40;
+  color: #f5f3ef;
+  border: 1px solid #2a4060;
+  border-radius: 4px;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+th {
+  background: #0a1520;
+  color: #c9a84c;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 2px solid #c9a84c33;
+}
+td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #1e3048;
+  color: #e8e4dc;
+  font-size: 0.95rem;
+}
+tr:hover td {
+  background: #162030;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.badge-admin    { background: #1a3a5c; color: #63b3ed; }
+.badge-manager  { background: #1a3a2a; color: #68d391; }
+.badge-hq       { background: #3a1a5c; color: #b794f4; }
+.badge-chef     { background: #3a2a1a; color: #f6ad55; }
+.badge-cashier  { background: #3a1a2a; color: #fc8181; }
+.badge-success  { background: #1a3a2a; color: #68d391; }
+.badge-warning  { background: #3a2a1a; color: #f6ad55; }
+.badge-danger   { background: #3a1a1a; color: #fc8181; }
+
+/* Dashboard stats cards */
+.stat-card {
+  background: #162030;
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 1px solid #1e3048;
+  text-align: center;
+}
+.stat-card h3 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  color: #c9a84c;
+}
+.stat-card p {
+  color: #8a9db5;
+  font-size: 0.85rem;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Alerts */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+.alert-danger  { background: #3a1a1a; color: #fc8181; border-left: 4px solid #fc8181; }
+.alert-warning { background: #3a2a1a; color: #f6ad55; border-left: 4px solid #f6ad55; }
+.alert-success { background: #1a3a2a; color: #68d391; border-left: 4px solid #68d391; }
+
+/* Form layout helpers */
+.form-group { margin-bottom: 1.25rem; }
+.form-group label { display: block; margin-bottom: 0.4rem; color: #8a9db5; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* Page title bar */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #1e3048;
+}
+.page-header h1 { margin: 0; font-size: 1.75rem; }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .form-row { grid-template-columns: 1fr; }
+}
