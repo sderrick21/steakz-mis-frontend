@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_BASE from './api';
 
 const Login: React.FC = () => {
   const [form, setForm] = useState({
@@ -25,7 +26,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('/auth/login', {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
