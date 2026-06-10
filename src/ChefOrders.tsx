@@ -1,99 +1,99 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE from './api';
 
-interface Order {
-  id: string;
-  table: string;
-  items: { name: string; quantity: number; price: number }[];
-  status: string;
-  total: number;
-  notes?: string;
-}
-
-const ORDERS_KEY = 'sharedOrders';
+interface OrderItem { menuItem: { name: string }; quantity: number; specialInstructions?: string; }
+interface Order { id: string; orderNumber: string; tableNumber: string; status: string; totalAmount: number; orderedAt: string; notes?: string; branch: { name: string }; waiterCashier: { username: string }; orderItems: OrderItem[]; }
 
 const ChefOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const token = localStorage.getItem('token');
+  const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-  // Fetch orders from localStorage
-  const fetchOrders = () => {
-    const ordersRaw = localStorage.getItem(ORDERS_KEY);
-    setOrders(ordersRaw ? JSON.parse(ordersRaw) : []);
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/orders?status=PENDING,CONFIRMED,PREPARING`, { headers: authHeaders });
+      const data = await res.json();
+      const active = (Array.isArray(data) ? data : []).filter((o: Order) => ['PENDING','CONFIRMED','PREPARING'].includes(o.status));
+      setOrders(active);
+    } catch {}
   };
 
-  useEffect(() => {
-    fetchOrders();
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === ORDERS_KEY) fetchOrders();
-    };
-    window.addEventListener('storage', handleStorage);
-    const interval = setInterval(fetchOrders, 1000);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      clearInterval(interval);
-    };
-  }, []);
+  useEffect(() => { fetchOrders(); const interval = setInterval(fetchOrders, 5000); return () => clearInterval(interval); }, []);
 
-  // Update order status
-  const updateOrderStatus = (orderId: string, newStatus: string) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId ? { ...order, status: newStatus } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(updatedOrders));
+  const updateStatus = async (orderId: string, status: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
+        method: 'PATCH', headers: authHeaders,
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (res.ok) { setMessage(`✅ Order updated to ${status}`); fetchOrders(); }
+      else setMessage(`❌ ${data.message}`);
+    } catch { setMessage('❌ Error updating order'); }
+    setLoading(false);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const statusColour = (s: string) => {
+    if (s === 'PENDING') return '#d97706';
+    if (s === 'CONFIRMED') return '#2563eb';
+    if (s === 'PREPARING') return '#7c3aed';
+    if (s === 'READY') return '#16a34a';
+    return '#6b7280';
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-4">Chef Orders</h1>
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Orders to Prepare</h2>
-        {orders.length === 0 ? (
-          <div className="text-gray-500">No orders found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-              <thead>
-                <tr>
-                  <th className="px-3 py-2 border-b">Order ID</th>
-                  <th className="px-3 py-2 border-b">Table</th>
-                  <th className="px-3 py-2 border-b">Items</th>
-                  <th className="px-3 py-2 border-b">Notes</th>
-                  <th className="px-3 py-2 border-b">Status</th>
-                  <th className="px-3 py-2 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 border-b">{order.id}</td>
-                    <td className="px-3 py-2 border-b">{order.table}</td>
-                    <td className="px-3 py-2 border-b">
-                      <ul className="list-disc ml-4">
-                        {order.items.map((item, idx) => (
-                          <li key={idx}>{item.name} x{item.quantity}</li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td className="px-3 py-2 border-b">{order.notes || '-'}</td>
-                    <td className="px-3 py-2 border-b">{order.status}</td>
-                    <td className="px-3 py-2 border-b">
-                      {order.status === 'pending' && (
-                        <button className="btn btn-blue mr-2" onClick={() => updateOrderStatus(order.id, 'in progress')}>Start</button>
-                      )}
-                      {order.status === 'in progress' && (
-                        <button className="btn btn-green" onClick={() => updateOrderStatus(order.id, 'ready')}>Mark Ready</button>
-                      )}
-                      {order.status === 'ready' && (
-                        <span className="text-green-600 font-semibold">Ready</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+    <div className="container">
+      <div className="page-header">
+        <h1>Kitchen Orders</h1>
+        <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }} onClick={fetchOrders}>Refresh</button>
       </div>
+
+      {message && <div className={`alert ${message.startsWith('✅') ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: 16 }}>{message}</div>}
+
+      {orders.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: 40, color: '#8a9db5' }}>No active orders — kitchen is clear! 🍽️</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+          {orders.map(order => (
+            <div key={order.id} className="card" style={{ borderLeft: `4px solid ${statusColour(order.status)}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: 15 }}>{order.orderNumber}</span>
+                <span className="badge" style={{ background: statusColour(order.status) + '33', color: statusColour(order.status) }}>{order.status}</span>
+              </div>
+              <div style={{ fontSize: 13, color: '#8a9db5', marginBottom: 12 }}>
+                {order.branch?.name} · Table {order.tableNumber || '—'} · Waiter: {order.waiterCashier?.username}
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                {order.orderItems.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span>{item.menuItem.name}</span>
+                    <span style={{ fontWeight: 600 }}>x{item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+              {order.notes && <div style={{ background: '#1a2d40', borderRadius: 6, padding: '6px 10px', fontSize: 13, marginBottom: 12, color: '#c9a84c' }}>📝 {order.notes}</div>}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {order.status === 'PENDING' && (
+                  <button className="btn" style={{ flex: 1, background: '#2563eb' }} onClick={() => updateStatus(order.id, 'CONFIRMED')} disabled={loading}>Accept</button>
+                )}
+                {order.status === 'CONFIRMED' && (
+                  <button className="btn" style={{ flex: 1, background: '#7c3aed' }} onClick={() => updateStatus(order.id, 'PREPARING')} disabled={loading}>Start Cooking</button>
+                )}
+                {order.status === 'PREPARING' && (
+                  <button className="btn" style={{ flex: 1, background: '#16a34a' }} onClick={() => updateStatus(order.id, 'READY')} disabled={loading}>Mark Ready</button>
+                )}
+                {order.status === 'PENDING' && (
+                  <button className="btn" style={{ flex: 1, background: '#dc2626' }} onClick={() => updateStatus(order.id, 'CANCELLED')} disabled={loading}>Reject</button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

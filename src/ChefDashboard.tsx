@@ -3,18 +3,14 @@ import { useHistory } from 'react-router-dom';
 
 const ChefDashboard: React.FC = () => {
   const history = useHistory();
+
   useEffect(() => {
     const role = localStorage.getItem('role');
-    if (role !== 'CHEF' && role !== 'chef') {
-      history.replace('/');
-    }
+    if (role !== 'CHEF') { history.replace('/'); return; }
+    history.replace('/chef-orders');
   }, [history]);
-  return (
-    <div className="container">
-      <h1>Chef Dashboard</h1>
-      <p>Welcome, Chef! Here you can view and manage orders.</p>
-    </div>
-  );
+
+  return <div className="container"><p style={{ color: '#8a9db5' }}>Redirecting...</p></div>;
 };
 
 export default ChefDashboard;

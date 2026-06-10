@@ -1,87 +1,64 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE from './api';
 
-const ORDERS_KEY = 'sharedOrders';
-const PAYMENTS_KEY = 'sharedPayments';
+interface OrderItem { menuItem: { name: string }; quantity: number; }
+interface Order { id: string; orderNumber: string; tableNumber: string; status: string; totalAmount: number; paymentStatus: string; orderedAt: string; branch: { name: string }; waiterCashier: { username: string }; orderItems: OrderItem[]; }
 
 const OrderManagement: React.FC = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const token = localStorage.getItem('token');
+  const authHeaders = { Authorization: `Bearer ${token}` };
 
-  // Fetch orders from localStorage
-  const fetchOrders = () => {
-    const ordersRaw = localStorage.getItem(ORDERS_KEY);
-    setOrders(ordersRaw ? JSON.parse(ordersRaw) : []);
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/orders`, { headers: authHeaders });
+      const data = await res.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch {}
   };
 
-  useEffect(() => {
-    fetchOrders();
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === ORDERS_KEY) fetchOrders();
-    };
-    window.addEventListener('storage', handleStorage);
-    const interval = setInterval(fetchOrders, 1000);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      clearInterval(interval);
-    };
-  }, []);
+  useEffect(() => { fetchOrders(); const interval = setInterval(fetchOrders, 5000); return () => clearInterval(interval); }, []);
 
-  const handleStatus = (id: string, status: string) => {
-    const updatedOrders = orders.map((o) => o.id === id ? { ...o, status } : o);
-    setOrders(updatedOrders);
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(updatedOrders));
-    if (status === 'paid') {
-      // Add payment to sharedPayments only if not already present
-      const paidOrder = orders.find((o) => o.id === id);
-      if (paidOrder) {
-        const paymentsRaw = localStorage.getItem(PAYMENTS_KEY);
-        const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
-        const alreadyPaid = payments.some((p: any) => p.orderId === paidOrder.id);
-        if (!alreadyPaid) {
-          const newPayment = {
-            id: Date.now().toString(),
-            orderId: paidOrder.id,
-            amount: paidOrder.total,
-            method: 'Cash', // or prompt/select method if needed
-            timestamp: new Date().toISOString(),
-          };
-          payments.push(newPayment);
-          localStorage.setItem(PAYMENTS_KEY, JSON.stringify(payments));
-        }
-      }
-    }
+  const statusColour = (s: string) => {
+    if (s === 'PENDING') return '#d97706';
+    if (s === 'CONFIRMED') return '#2563eb';
+    if (s === 'PREPARING') return '#7c3aed';
+    if (s === 'READY') return '#16a34a';
+    if (s === 'SERVED') return '#6b7280';
+    if (s === 'CANCELLED') return '#dc2626';
+    return '#6b7280';
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">Order Management</h1>
-      <table className="w-full border text-left mb-4">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2">Order ID</th>
-            <th className="p-2">Table</th>
-            <th className="p-2">Items</th>
-            <th className="p-2">Total</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map(order => (
-            <tr key={order.id} className="border-t">
-              <td className="p-2">{order.id}</td>
-              <td className="p-2">{order.table}</td>
-              <td className="p-2">{order.items.map((item: any) => `${item.name} x${item.quantity}`).join(', ')}</td>
-              <td className="p-2">${order.total}</td>
-              <td className="p-2">{order.status}</td>
-              <td className="p-2 flex gap-2">
-                {order.status === 'pending' && (
-                  <button className="bg-green-600 text-white px-2 py-1 rounded text-xs" onClick={() => handleStatus(order.id, 'paid')}>Mark as Paid</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="container">
+      <div className="page-header">
+        <h1>Order Management</h1>
+        <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }} onClick={fetchOrders}>Refresh</button>
+      </div>
+      <div className="card">
+        {orders.length === 0 ? (
+          <p style={{ color: '#8a9db5', textAlign: 'center', padding: 30 }}>No orders found.</p>
+        ) : (
+          <table>
+            <thead><tr><th>Order #</th><th>Branch</th><th>Table</th><th>Waiter</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th>Time</th></tr></thead>
+            <tbody>
+              {orders.map(order => (
+                <tr key={order.id}>
+                  <td style={{ fontWeight: 600, fontSize: 13 }}>{order.orderNumber}</td>
+                  <td>{order.branch?.name}</td>
+                  <td>{order.tableNumber || '—'}</td>
+                  <td>{order.waiterCashier?.username}</td>
+                  <td style={{ fontSize: 12 }}>{order.orderItems.map(i => `${i.menuItem.name} x${i.quantity}`).join(', ')}</td>
+                  <td style={{ color: '#c9a84c', fontWeight: 700 }}>£{Number(order.totalAmount).toFixed(2)}</td>
+                  <td><span className="badge" style={{ background: statusColour(order.status) + '33', color: statusColour(order.status) }}>{order.status}</span></td>
+                  <td><span className={`badge ${order.paymentStatus === 'PAID' ? 'badge-success' : 'badge-warning'}`}>{order.paymentStatus}</span></td>
+                  <td style={{ fontSize: 12, color: '#8a9db5' }}>{new Date(order.orderedAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 };

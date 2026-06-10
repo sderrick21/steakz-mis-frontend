@@ -33,35 +33,19 @@ const Login: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        // Save role in localStorage
+        // Save role and token in localStorage
         if (data && data.user && data.user.role) {
           localStorage.setItem('role', data.user.role);
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
           appendAccessLog(data.user.username || form.username, 'Login Success');
-          if (data.user.role === 'ADMIN') {
-            window.location.href = '/admin';
-            return;
-          }
-          if (data.user.role === 'MANAGER') {
-            window.location.href = '/manager';
-            return;
-          }
-          if (data.user.role === 'HQMANAGER' || data.user.role === 'HQ_MANAGER') {
-            window.location.href = '/hqmanager';
-            return;
-          }
-          if (data.user.role === 'CHEF') {
-            window.location.href = '/chef';
-            return;
-          }
-          if (data.user.role === 'CUSTOMER') {
-            window.location.href = '/menu';
-            return;
-          }
-          // Add redirect for CASHIER and WAITER_CASHIER roles
-          if (data.user.role === 'CASHIER' || data.user.role === 'WAITER_CASHIER') {
-            window.location.href = '/cashier';
-            return;
-          }
+          if (data.user.role === 'ADMIN') { window.location.href = '/user-management'; return; }
+          if (data.user.role === 'MANAGER') { window.location.href = '/manager'; return; }
+          if (data.user.role === 'HQMANAGER' || data.user.role === 'HQ_MANAGER') { window.location.href = '/hqmanager'; return; }
+          if (data.user.role === 'CHEF') { window.location.href = '/chef-orders'; return; }
+          if (data.user.role === 'CASHIER' || data.user.role === 'WAITER_CASHIER') { window.location.href = '/cashier-payment'; return; }
+          if (data.user.role === 'WAITER') { window.location.href = '/waiter'; return; }
+          if (data.user.role === 'CUSTOMER') { window.location.href = '/menu'; return; }
         }
       } else {
         const text = await res.text();

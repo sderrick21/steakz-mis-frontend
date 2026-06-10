@@ -23,6 +23,7 @@ const Navbar: React.FC = () => {
   const isHQManager = role === 'HQMANAGER' || role === 'hqmanager' || role === 'HQ_MANAGER';
   // const isChef = role === 'CHEF' || role === 'chef';
   const isCashier = role === 'CASHIER' || role === 'cashier' || role === 'WAITER_CASHIER' || role === 'waiter_cashier';
+  const isWaiter = role === 'WAITER' || role === 'waiter';
 
   const handleLogout = () => {
     localStorage.removeItem('role');
@@ -94,7 +95,11 @@ const Navbar: React.FC = () => {
           {isAdmin && <li><Link to="/branch-management" style={{ color: '#e0b07d', textDecoration: 'none' }}>Branch Management</Link></li>}
           {isAdmin && <li><Link to="/access-log" style={{ color: '#e0b07d', textDecoration: 'none' }}>Access Log</Link></li>}
           {isAdmin && <li><Link to="/inventory-management" style={{ color: '#e0b07d', textDecoration: 'none' }}>Inventory Management</Link></li>}
-          {isCashier && <li><Link to="/order-management" style={{ color: '#e0b07d', textDecoration: 'none' }}>Order Management</Link></li>}
+          {isWaiter && (
+            <>
+              <li><Link to="/waiter" style={{ color: '#e0b07d', textDecoration: 'none' }}>Place Order</Link></li>
+            </>
+          )}
           {isCashier && <li><Link to="/payment-history" style={{ color: '#e0b07d', textDecoration: 'none' }}>Payment History</Link></li>}
           {/* Show Payment Processing link robustly for any cashier role variant */}
           {(isCashier || (user && user.role && ['cashier','waiter_cashier','waiter_cashier','waiter-cashier','waiter cashier'].includes(user.role.toLowerCase()))) && (

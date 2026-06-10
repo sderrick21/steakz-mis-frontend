@@ -1,76 +1,85 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE from './api';
 
-const PAYMENTS_KEY = 'sharedPayments';
+interface OrderItem { menuItem: { name: string }; quantity: number; }
+interface Order { id: string; orderNumber: string; tableNumber: string; status: string; totalAmount: number; paymentStatus: string; paymentMethod?: string; orderedAt: string; branch: { name: string }; orderItems: OrderItem[]; }
 
 const PaymentHistory: React.FC = () => {
-  const [payments, setPayments] = useState<any[]>([]);
-  // Branch selector for payment history (admin/manager)
-  const [branch, setBranch] = useState<string>('');
-  const [branches, setBranches] = useState<string[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [branches, setBranches] = useState<{id:string;name:string}[]>([]);
+  const token = localStorage.getItem('token');
+  const authHeaders = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    // Always use these branches
-    const branchList = ['downtown', 'uptown', 'suburb'];
-    setBranches(branchList);
-    if (!branch) setBranch(branchList[0]);
+    fetchBranches();
+    fetchPaidOrders();
   }, []);
 
-  // Filter payments by branch
-  useEffect(() => {
-    const fetchPayments = () => {
-      const paymentsRaw = localStorage.getItem(PAYMENTS_KEY);
-      let allPayments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
-      // Only filter if branch is set
-      if (branch) {
-        allPayments = allPayments.filter((p: any) => p.branch === branch);
-      }
-      setPayments(allPayments);
-    };
-    fetchPayments();
-    // Real-time sync
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === PAYMENTS_KEY) fetchPayments();
-    };
-    window.addEventListener('storage', handleStorage);
-    const interval = setInterval(fetchPayments, 1000);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      clearInterval(interval);
-    };
-  }, [branch, branches]); // Add both 'branch' and 'branches' to dependency array to fix eslint warning
+  const fetchBranches = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/branches`, { headers: authHeaders });
+      const data = await res.json();
+      setBranches(Array.isArray(data) ? data : []);
+    } catch {}
+  };
+
+  const fetchPaidOrders = async () => {
+    try {
+      const url = selectedBranch ? `${API_BASE}/api/orders?branchId=${selectedBranch}` : `${API_BASE}/api/orders`;
+      const res = await fetch(url, { headers: authHeaders });
+      const data = await res.json();
+      const paid = (Array.isArray(data) ? data : []).filter((o: Order) => o.paymentStatus === 'PAID');
+      setOrders(paid);
+    } catch {}
+  };
+
+  useEffect(() => { fetchPaidOrders(); }, [selectedBranch]);
+
+  const totalRevenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">Payment History</h1>
-      {/* Branch selector for admin/manager */}
-      <div className="mb-4">
-        <label className="mr-2 font-semibold">Select Branch:</label>
-        <select className="border p-2 rounded" value={branch} onChange={e => setBranch(e.target.value)}>
-          {branches.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
+    <div className="container">
+      <div className="page-header">
+        <h1>Payment History</h1>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)} style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #2a4060', background: '#1a2d40', color: '#f5f3ef', fontSize: 14 }}>
+            <option value="">All Branches</option>
+            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+          <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }} onClick={fetchPaidOrders}>Refresh</button>
+        </div>
       </div>
-      <table className="w-full border text-left">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2">Payment ID</th>
-            <th className="p-2">Order ID</th>
-            <th className="p-2">Amount</th>
-            <th className="p-2">Time</th>
-            <th className="p-2">Method</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payments.map(payment => (
-            <tr key={payment.id} className="border-t">
-              <td className="p-2">{payment.id}</td>
-              <td className="p-2">{payment.orderId}</td>
-              <td className="p-2">${payment.amount}</td>
-              <td className="p-2">{new Date(payment.timestamp || payment.time).toLocaleString()}</td>
-              <td className="p-2">{payment.method}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        <div className="stat-card"><h3>{orders.length}</h3><p>Total Transactions</p></div>
+        <div className="stat-card"><h3>£{totalRevenue.toFixed(2)}</h3><p>Total Revenue</p></div>
+        <div className="stat-card"><h3>£{orders.length ? (totalRevenue / orders.length).toFixed(2) : '0.00'}</h3><p>Average Order Value</p></div>
+      </div>
+
+      <div className="card">
+        <h2 style={{ marginBottom: 16 }}>Completed Payments</h2>
+        {orders.length === 0 ? (
+          <p style={{ color: '#8a9db5', textAlign: 'center', padding: 30 }}>No paid orders found.</p>
+        ) : (
+          <table>
+            <thead><tr><th>Order #</th><th>Branch</th><th>Table</th><th>Items</th><th>Amount</th><th>Method</th><th>Time</th></tr></thead>
+            <tbody>
+              {orders.map(order => (
+                <tr key={order.id}>
+                  <td style={{ fontWeight: 600, fontSize: 13 }}>{order.orderNumber}</td>
+                  <td>{order.branch?.name}</td>
+                  <td>{order.tableNumber || '—'}</td>
+                  <td style={{ fontSize: 12 }}>{order.orderItems.map(i => `${i.menuItem.name} x${i.quantity}`).join(', ')}</td>
+                  <td style={{ color: '#c9a84c', fontWeight: 700 }}>£{Number(order.totalAmount).toFixed(2)}</td>
+                  <td><span className="badge badge-success">{order.paymentMethod || '—'}</span></td>
+                  <td style={{ fontSize: 12, color: '#8a9db5' }}>{new Date(order.orderedAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 };

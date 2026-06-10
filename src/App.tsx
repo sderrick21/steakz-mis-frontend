@@ -33,6 +33,7 @@ import HQManagerSales from './HQManagerSales';
 import ChefOrders from './ChefOrders';
 import ChefOrderHistory from './ChefOrderHistory';
 import PaymentProcessing from './PaymentProcessing';
+import WaiterDashboard from './WaiterDashboard';
 
 function App() {
   // HQ manager redirect logic
@@ -51,6 +52,13 @@ function App() {
     }
   }, []);
 
+  // Waiter redirect logic
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if ((role === 'WAITER' || role === 'waiter') && (window.location.pathname === '/')) {
+      window.location.replace('/waiter');
+    }
+  }, []);
   // Chef redirect logic
   useEffect(() => {
     const role = localStorage.getItem('role');
@@ -94,6 +102,7 @@ function App() {
           <Route path="/hqmanager-sales" component={HQManagerSales} />
           <Route path="/chef-orders" component={ChefOrders} />
           <Route path="/chef-order-history" component={ChefOrderHistory} />
+          <Route path="/waiter" component={WaiterDashboard} />
           <Route path="/cashier-payment" component={PaymentProcessing} />
           <Route component={NotFound} />
         </Switch>
