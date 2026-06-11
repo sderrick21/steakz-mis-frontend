@@ -13,7 +13,7 @@ const ChefOrders: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/orders?status=PENDING,CONFIRMED,PREPARING`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/orders`, { headers: authHeaders });
       const data = await res.json();
       const active = (Array.isArray(data) ? data : []).filter((o: Order) => ['PENDING','CONFIRMED','PREPARING'].includes(o.status));
       setOrders(active);

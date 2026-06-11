@@ -7,7 +7,7 @@ const initialUsers = [
   { id: 4, username: 'cashier1', role: 'CASHIER', active: false, branch: 'Downtown' },
 ];
 
-const roles = ['ADMIN', 'MANAGER', 'CHEF', 'CASHIER', 'HQMANAGER', 'CUSTOMER'];
+const roles = ['ADMIN', 'MANAGER', 'HQ_MANAGER', 'CHEF', 'CASHIER', 'WAITER', 'CUSTOMER'];
 const branches = ['Downtown', 'Uptown', 'Suburb'];
 
 const UserManagement: React.FC = () => {
