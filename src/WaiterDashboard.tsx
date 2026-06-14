@@ -150,10 +150,7 @@ const WaiterDashboard: React.FC = () => {
                 <div className="form-group" style={{ flex: 1, minWidth: 200 }}>
                   <label>Branch</label>
                   <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)}>
-                    {branches.filter(b => b.id === selectedBranch).length > 0
-                      ? branches.filter(b => b.id === selectedBranch).map(b => <option key={b.id} value={b.id}>{b.name}</option>)
-                      : branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)
-                    }
+                    {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
